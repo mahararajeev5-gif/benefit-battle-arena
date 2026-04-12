@@ -9,6 +9,17 @@
 
 ---
 
+## 🚀 Live Links
+
+| Role | Link |
+|------|------|
+| 🛠 **Admin Panel** | [https://mahararajeev5-gif.github.io/benefit-battle-arena/](https://mahararajeev5-gif.github.io/benefit-battle-arena/) |
+| 🎮 **Player Screen** | [https://mahararajeev5-gif.github.io/benefit-battle-arena/player.html](https://mahararajeev5-gif.github.io/benefit-battle-arena/player.html) |
+
+> 💡 **Admin** apne laptop pe Admin Panel khole aur **Players** ko Player Screen ka link WhatsApp pe bheje!
+
+---
+
 ## 🎯 What is This?
 
 **Benefit Battle Arena** is an interactive game designed for **corporate HR events**. Teams compete against each other to build the best employee benefits package — while staying within a fixed budget and maximizing happiness points!
@@ -36,6 +47,7 @@ The admin controls the game, sets the timer, and watches teams compete in real-t
 - ✅ Visual Benefits Grid
 - ✅ Remove benefits (instant refund)
 - ✅ Submit Package
+- ✅ Live Leaderboard after submit
 
 ### 🔥 Firebase Powered
 - ✅ Real-time sync across all devices
@@ -45,36 +57,17 @@ The admin controls the game, sets the timer, and watches teams compete in real-t
 
 ---
 
-## 🚀 How to Run
-
-### Option 1 — Direct Browser (Easiest)
-```
-1. Download benefit-builder-firebase.html
-2. Double-click the file
-3. Opens in your browser — done!
-```
-
-### Option 2 — VS Code Live Server
-```
-1. Open folder in VS Code
-2. Install "Live Server" extension
-3. Click "Go Live" at bottom right
-4. Opens in browser automatically
-```
-
----
-
 ## 🎮 How to Play
 
 ### Admin Side:
-1. Open the file → Go to **Admin Panel**
+1. Open **Admin Panel** link
 2. Add/Edit benefits in the **Benefit Library**
 3. Set **Event Config** (Budget, Timer, Max Teams)
 4. Click **▶ Start Game**
 5. Watch teams on the **Live Dashboard**
 
 ### Player Side:
-1. Open the same file → Go to **Player Screen**
+1. Open **Player Screen** link on phone/laptop
 2. Enter your **Team Name** → Join Game
 3. Wait for admin to start
 4. Select benefits from the catalog
@@ -104,6 +97,7 @@ The admin controls the game, sets the timer, and watches teams compete in real-t
 | Vanilla JavaScript | Game logic |
 | Firebase Realtime DB | Real-time data sync |
 | Google Fonts | Typography (Syne + DM Sans) |
+| GitHub Pages | Free hosting |
 
 ---
 
@@ -112,24 +106,15 @@ The admin controls the game, sets the timer, and watches teams compete in real-t
 ```
 benefit-battle-arena/
 │
-└── benefit-builder-firebase.html   ← Entire app in ONE file!
-    ├── <style>     → All CSS
-    ├── <div>       → All HTML
-    └── <script>    → All JavaScript + Firebase
+├── index.html     → Admin Panel (Game control)
+├── player.html    → Player Screen (Game play)
+└── README.md      → Documentation
 ```
-
-> 💡 No separate frontend/backend folders needed — Firebase handles the backend!
 
 ---
 
-## 🔥 Firebase Setup (Already Done!)
+## 🔥 Firebase Database Structure
 
-This project uses **Firebase Realtime Database** for:
-- Real-time team sync
-- Live leaderboard
-- Game state management
-
-Database structure:
 ```
 benefit-builder-default-rtdb
 ├── 📁 game          → Game state & timer
