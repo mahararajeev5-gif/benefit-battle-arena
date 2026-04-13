@@ -188,16 +188,18 @@
 <div id="toast-container"></div>
 
 <nav class="nav">
-  <div class="nav-logo"> Benefit Builder</div>
+  <div class="nav-logo" id="nav-logo-secret"> Benefit Builder</div>
   <div class="nav-tabs">
     <div class="db-indicator">
       <div class="db-dot" id="db-dot"></div>
       <span id="db-status-text">Connecting…</span>
     </div>
-    <button class="nav-tab" id="nav-admin-btn" onclick="openAdminLogin()" style="display:none;">🛠 Admin Panel</button>
+    <!-- These are ONLY visible after admin login -->
+    <button class="nav-tab" id="nav-admin-btn" onclick="switchView('admin')" style="display:none;">🛠 Admin Panel</button>
     <button class="nav-tab active" id="nav-player-btn" onclick="switchView('player')"> Player Screen</button>
-    <button class="nav-tab btn-ghost btn-sm" id="nav-admin-unlock-btn" onclick="openAdminLogin()" style="font-size:0.75rem;padding:5px 10px;">🔐 Admin</button>
     <button class="btn btn-ghost btn-sm" id="admin-logout-btn" onclick="adminLogout()" style="display:none;font-size:0.75rem;">🚪 Logout</button>
+    <!-- Hidden secret admin unlock - triple click on logo activates it -->
+    <button id="nav-admin-unlock-btn" onclick="openAdminLogin()" style="display:none;">🔐</button>
   </div>
 </nav>
 
@@ -407,8 +409,29 @@ async function getAdminPassword(){
   return snap.exists() ? snap.val() : DEFAULT_PASS;
 }
 
+// ── ADMIN SESSION HELPERS ─────────────────────────────────────
+function setAdminUI(loggedIn){
+  ADMIN_LOGGED_IN = loggedIn;
+  document.getElementById('nav-admin-btn').style.display    = loggedIn ? 'inline-flex' : 'none';
+  document.getElementById('admin-logout-btn').style.display = loggedIn ? 'inline-flex' : 'none';
+  // nav-player-btn always visible, nav-admin-unlock-btn always hidden from players
+}
+function checkAdminSession(){
+  if(localStorage.getItem('adminSession')==='true'){ setAdminUI(true); switchView('admin'); }
+}
+
+// Secret triple-click on logo to open admin login
+let logoClickCount = 0, logoClickTimer = null;
+document.getElementById('nav-logo-secret').addEventListener('click', function(){
+  logoClickCount++;
+  clearTimeout(logoClickTimer);
+  logoClickTimer = setTimeout(()=>{ logoClickCount=0; }, 600);
+  if(logoClickCount >= 3){ logoClickCount=0; openAdminLogin(); }
+});
+
 // ── ADMIN LOGIN UI ────────────────────────────────────────────
 window.openAdminLogin = function(){
+  if(ADMIN_LOGGED_IN){ switchView('admin'); return; }
   const ov = document.getElementById('admin-login-overlay');
   ov.style.display='flex';
   document.getElementById('admin-pass-input').value='';
@@ -425,12 +448,9 @@ window.doAdminLogin = async function(){
   const entered = document.getElementById('admin-pass-input').value;
   const correct = await getAdminPassword();
   if(entered === correct){
-    ADMIN_LOGGED_IN = true;
+    localStorage.setItem('adminSession','true');
+    setAdminUI(true);
     closeAdminLogin();
-    // Show admin panel
-    document.getElementById('nav-admin-unlock-btn').style.display='none';
-    document.getElementById('nav-admin-btn').style.display='inline-flex';
-    document.getElementById('admin-logout-btn').style.display='inline-flex';
     switchView('admin');
     toast('✅ Admin access granted!','success');
   } else {
@@ -438,12 +458,26 @@ window.doAdminLogin = async function(){
   }
 };
 window.adminLogout = function(){
-  ADMIN_LOGGED_IN = false;
-  document.getElementById('nav-admin-btn').style.display='none';
-  document.getElementById('admin-logout-btn').style.display='none';
-  document.getElementById('nav-admin-unlock-btn').style.display='inline-flex';
+  localStorage.removeItem('adminSession');
+  setAdminUI(false);
   switchView('player');
   toast('Logged out of admin.','info');
+};
+window.changeAdminPassword = async function(){
+  const oldP = document.getElementById('admin-old-pass').value;
+  const newP = document.getElementById('admin-new-pass').value.trim();
+  const msg = document.getElementById('admin-change-msg');
+  const correct = await getAdminPassword();
+  if(oldP !== correct){ msg.style.display='block'; msg.style.color='var(--red)'; msg.textContent='❌ Current password is wrong!'; return; }
+  if(!newP){ msg.style.display='block'; msg.style.color='var(--red)'; msg.textContent='❌ New password cannot be empty!'; return; }
+  await set(adminPassRef, newP);
+  // Force logout from ALL sessions — clear localStorage
+  localStorage.removeItem('adminSession');
+  setAdminUI(false);
+  closeAdminLogin();
+  switchView('player');
+  msg.style.display='block'; msg.style.color='var(--green)'; msg.textContent='✅ Password changed! Please login again.';
+  toast('🔑 Password changed! Login again with new password.','info');
 };
 window.changeAdminPassword = async function(){
   const oldP = document.getElementById('admin-old-pass').value;
@@ -861,6 +895,7 @@ async function boot(){
     setDB(true);
     startListeners();
     hideLoading();
+    checkAdminSession(); // 🔑 Restore admin session if saved
     toast('🔥 Firebase connected!','success');
   } catch(e){
     console.error(e);
