@@ -1,28 +1,22 @@
 # ⚡ Benefit Battle Arena
 
-> 🎮 Real-time multiplayer HR Benefits Game where teams compete to build the best employee benefits package within budget. Features Admin Panel, Live Leaderboard, Timer & Firebase Realtime sync — built in a Single HTML File.
-
-![HTML](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-![CSS](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+> 🎮 Real-time multiplayer HR Benefits Game — teams compete to build the best employee benefits package within budget. Admin Panel + Live Leaderboard + Firebase sync, all in a **Single HTML File**.
 
 ---
 
-## 🚀 Live Links
+## 🚀 Live Link
 
 | Role | Link |
 |------|------|
-| 🛠 **Admin Panel** | [https://mahararajeev5-gif.github.io/benefit-battle-arena/](https://mahararajeev5-gif.github.io/benefit-battle-arena/) |
-| 🎮 **Player Screen** | [https://mahararajeev5-gif.github.io/benefit-battle-arena/player.html](https://mahararajeev5-gif.github.io/benefit-battle-arena/player.html) |
+| 🛠 Admin + 🎮 Player | [mahararajeev5-gif.github.io/benefit-battle-arena](https://mahararajeev5-gif.github.io/benefit-battle-arena/) |
 
-> 💡 **Admin** apne laptop pe Admin Panel khole aur **Players** ko Player Screen ka link WhatsApp pe bheje!
+> 💡 **Admin** apne laptop pe link khole aur **Players** ko same link WhatsApp pe bheje — sab ek hi file mein hai!
 
 ---
 
 ## 🎯 What is This?
 
-**Benefit Battle Arena** is an interactive game designed for **corporate HR events**. Teams compete against each other to build the best employee benefits package — while staying within a fixed budget and maximizing happiness points!
+**Benefit Battle Arena** is an interactive game designed for corporate HR events. Teams compete against each other to build the best employee benefits package — while staying within a fixed budget and maximizing happiness points!
 
 The admin controls the game, sets the timer, and watches teams compete in real-time on a live leaderboard.
 
@@ -30,49 +24,59 @@ The admin controls the game, sets the timer, and watches teams compete in real-t
 
 ## ✨ Features
 
-### 🛠 Admin Panel
+### 🛠 Admin Panel *(Password Protected)*
+- 🔐 Secure login — only admin can access
 - ✅ Full Benefit Library Management (Add, Edit, Delete)
 - ✅ Event Configuration (Budget, Timer, Max Teams)
-- ✅ Start / Reset Game Controls
+- ✅ Start Game / Round Reset / Full Reset controls
 - ✅ Live Dashboard — see all teams in real-time
 - ✅ Live Leaderboard with rankings
+- ✅ Change admin password anytime
 
 ### 🎮 Player Game Screen
-- ✅ Team Login
-- ✅ Waiting Screen before game starts
-- ✅ Live Countdown Timer
-- ✅ Budget Bar (decreases on selection)
-- ✅ Happiness Points Meter
+- ✅ Team Login with waiting screen
+- ✅ Game starts only when Admin clicks Start
+- ✅ Live Countdown Timer (browser-independent)
+- ✅ Budget Bar & Happiness Points Meter
 - ✅ Benefits Catalog (categorized)
 - ✅ Visual Benefits Grid
-- ✅ Remove benefits (instant refund)
-- ✅ Submit Package
-- ✅ Live Leaderboard after submit
+- ✅ Remove benefits with instant refund
+- ✅ Submit Package when ready
 
 ### 🔥 Firebase Powered
 - ✅ Real-time sync across all devices
-- ✅ Live leaderboard updates
+- ✅ Timer runs server-side — no browser dependency
+- ✅ Live leaderboard updates instantly
 - ✅ Data persists across sessions
-- ✅ Multiple teams on different devices
 
 ---
 
 ## 🎮 How to Play
 
-### Admin Side:
-1. Open **Admin Panel** link
-2. Add/Edit benefits in the **Benefit Library**
-3. Set **Event Config** (Budget, Timer, Max Teams)
-4. Click **▶ Start Game**
-5. Watch teams on the **Live Dashboard**
+**Admin Side:**
+1. Open the link and **triple-click the logo** to open Admin Login
+2. Enter password → access Admin Panel
+3. Add/Edit benefits in the Benefit Library
+4. Set Event Config (Budget, Timer, Max Teams)
+5. Click **▶ Start Game**
+6. Watch teams on the Live Dashboard
 
-### Player Side:
-1. Open **Player Screen** link on phone/laptop
-2. Enter your **Team Name** → Join Game
-3. Wait for admin to start
+**Player Side:**
+1. Open the same link on phone/laptop
+2. Enter your Team Name → Join Game
+3. Wait for admin to start the game
 4. Select benefits from the catalog
 5. Stay within budget to submit!
-6. Highest **Happiness Points** wins 🏆
+6. Highest Happiness Points wins 🏆
+
+---
+
+## 🔄 Reset Options
+
+| Option | What it does |
+|--------|-------------|
+| 🔄 Same Teams – New Round | Keeps team names, resets budget & selections for a new round |
+| 🗑 Full Reset | Deletes all teams — fresh start with new players |
 
 ---
 
@@ -95,7 +99,8 @@ The admin controls the game, sets the timer, and watches teams compete in real-t
 | HTML5 | Structure & layout |
 | CSS3 | Styling & animations |
 | Vanilla JavaScript | Game logic |
-| Firebase Realtime DB | Real-time data sync |
+| Firebase Realtime DB | Real-time data sync via `onValue` listeners |
+| Firebase Hosting Config | `databaseURL` + `apiKey` based connection |
 | Google Fonts | Typography (Syne + DM Sans) |
 | GitHub Pages | Free hosting |
 
@@ -106,8 +111,7 @@ The admin controls the game, sets the timer, and watches teams compete in real-t
 ```
 benefit-battle-arena/
 │
-├── index.html     → Admin Panel (Game control)
-├── player.html    → Player Screen (Game play)
+├── index.html     → Full game (Admin + Player in one file)
 └── README.md      → Documentation
 ```
 
@@ -117,9 +121,10 @@ benefit-battle-arena/
 
 ```
 benefit-builder-default-rtdb
-├── 📁 game          → Game state & timer
+├── 📁 game          → Game state, timer & startedAt timestamp
 ├── 📁 benefits      → Benefit library
-└── 📁 teams         → All team data
+├── 📁 teams         → All team data
+└── 📁 adminConfig   → Admin password (hashed)
 ```
 
 ---
@@ -152,4 +157,4 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ---
 
-> ⚡ Built with ❤️ using HTML, CSS, JavaScript & Firebase
+⚡ Built with AI ❤️ using HTML, CSS, JavaScript & Firebase Realtime Database
