@@ -297,6 +297,17 @@
         <input type="text" id="player-team-input" placeholder="Team Name…" maxlength="30"/>
         <button class="btn btn-primary" onclick="playerLogin()">Join Game →</button>
       </div>
+
+      <!-- Live Leaderboard on login screen -->
+      <div id="login-leaderboard-wrap" style="width:100%;max-width:420px;margin-top:8px;">
+        <div style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;margin-bottom:12px;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;">
+          🏆 <span>Live Leaderboard</span>
+        </div>
+        <div id="login-leaderboard-list">
+          <p style="text-align:center;color:var(--muted);font-size:0.85rem;">No teams yet — be the first! 🚀</p>
+        </div>
+      </div>
+
       <p class="text-muted text-sm"> Powered by Firebase Realtime Database</p>
     </div>
   </div>
@@ -731,7 +742,7 @@ function renderTeamCards(){
 function renderLeaderboard(){
   const el=document.getElementById('leaderboard-list');
   const teams=Object.keys(LOCAL.teams);
-  if(!teams.length){el.innerHTML='<p class="text-muted text-sm">No teams yet.</p>';return;}
+  if(!teams.length){el.innerHTML='<p class="text-muted text-sm">No teams yet.</p>';renderLoginLeaderboard([]);return;}
   const ranked=teams.map(n=>({name:n,...LOCAL.teams[n]})).sort((a,b)=>(b.hp||0)-(a.hp||0)||(b.budget||0)-(a.budget||0));
   const medals=['🥇','🥈','🥉'];
   el.innerHTML=ranked.map((t,i)=>{
@@ -742,6 +753,30 @@ function renderLeaderboard(){
       <div class="podium-name">${t.name}</div>
       <div class="podium-stats"><div class="podium-hp">${t.hp||0} HP</div><div>$${t.budget||0} left · ${sel} benefits</div></div>
       ${t.submitted?'<span class="badge badge-green">✓</span>':''}
+    </div>`;}).join('');
+  renderLoginLeaderboard(ranked);
+}
+
+function renderLoginLeaderboard(ranked){
+  const el=document.getElementById('login-leaderboard-list');
+  if(!el) return;
+  if(!ranked||!ranked.length){
+    el.innerHTML='<p style="text-align:center;color:var(--muted);font-size:0.85rem;">No teams yet — be the first! 🚀</p>';
+    return;
+  }
+  const medals=['🥇','🥈','🥉'];
+  el.innerHTML=ranked.map((t,i)=>{
+    const r=i+1;
+    const medal=r<=3?medals[i]:r;
+    const color=r===1?'#fbbf24':r===2?'#94a3b8':r===3?'#c2865e':'var(--muted)';
+    return`<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;${r===1?'border-color:#fbbf24;':r===2?'border-color:#94a3b8;':r===3?'border-color:#c2865e;':''}">
+      <div style="font-size:1.2rem;min-width:28px;text-align:center;">${medal}</div>
+      <div style="flex:1;font-weight:700;font-size:0.9rem;">${t.name}</div>
+      <div style="text-align:right;">
+        <div style="font-family:'Syne',sans-serif;font-weight:800;color:var(--green);font-size:1rem;">${t.hp||0} HP</div>
+        <div style="font-size:0.75rem;color:var(--muted);">$${t.budget||0} left</div>
+      </div>
+      ${t.submitted?'<span style="font-size:0.7rem;background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3);padding:2px 7px;border-radius:20px;font-weight:600;">✓</span>':''}
     </div>`;}).join('');
 }
 
