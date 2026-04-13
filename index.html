@@ -194,13 +194,34 @@
       <div class="db-dot" id="db-dot"></div>
       <span id="db-status-text">Connecting…</span>
     </div>
-    <button class="nav-tab active" onclick="switchView('admin')">🛠 Admin Panel</button>
-    <button class="nav-tab" onclick="switchView('player')"> Player Screen</button>
+    <button class="nav-tab" id="nav-admin-btn" onclick="openAdminLogin()" style="display:none;">🛠 Admin Panel</button>
+    <button class="nav-tab active" id="nav-player-btn" onclick="switchView('player')"> Player Screen</button>
+    <button class="nav-tab btn-ghost btn-sm" id="nav-admin-unlock-btn" onclick="openAdminLogin()" style="font-size:0.75rem;padding:5px 10px;">🔐 Admin</button>
+    <button class="btn btn-ghost btn-sm" id="admin-logout-btn" onclick="adminLogout()" style="display:none;font-size:0.75rem;">🚪 Logout</button>
   </div>
 </nav>
 
+<!-- ADMIN LOGIN OVERLAY -->
+<div id="admin-login-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:10000;display:none;align-items:center;justify-content:center;">
+  <div class="login-card" style="position:relative;">
+    <div class="login-logo">🔐 Admin Login</div>
+    <div class="login-sub">Enter admin password to continue</div>
+    <input type="password" id="admin-pass-input" placeholder="Password…" onkeydown="if(event.key==='Enter')doAdminLogin()"/>
+    <button class="btn btn-primary" onclick="doAdminLogin()" style="width:100%;justify-content:center;margin-top:12px;">Unlock Admin Panel</button>
+    <div id="admin-login-err" style="color:var(--red);font-size:0.82rem;margin-top:8px;display:none;">❌ Wrong password!</div>
+    <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:8px;">Change Password</div>
+      <input type="password" id="admin-old-pass" placeholder="Current password…" style="margin-bottom:6px;"/>
+      <input type="password" id="admin-new-pass" placeholder="New password…" style="margin-bottom:6px;"/>
+      <button class="btn btn-ghost btn-sm" onclick="changeAdminPassword()" style="width:100%;justify-content:center;">🔑 Change Password</button>
+      <div id="admin-change-msg" style="font-size:0.8rem;margin-top:6px;display:none;"></div>
+    </div>
+    <button onclick="closeAdminLogin()" style="position:absolute;top:12px;right:14px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;">✕</button>
+  </div>
+</div>
+
 <!-- ===== ADMIN ===== -->
-<div id="view-admin" class="view active">
+<div id="view-admin" class="view">
   <div class="container">
     <div class="flex" style="justify-content:space-between;align-items:center;margin-bottom:24px;">
       <div>
@@ -264,7 +285,7 @@
 </div>
 
 <!-- ===== PLAYER ===== -->
-<div id="view-player" class="view">
+<div id="view-player" class="view active">
   <div id="ps-login">
     <div class="login-screen">
       <div class="login-card">
@@ -346,7 +367,7 @@
 <script type="module">
 // ── FIREBASE IMPORTS ──────────────────────────────────────────
 import { initializeApp }         from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, get, update, onValue, remove }
+import { getDatabase, ref, set, get, update, onValue, remove, serverTimestamp }
                                   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // ── YOUR CONFIG ───────────────────────────────────────────────
@@ -373,6 +394,68 @@ let LOCAL = { gameStatus:'waiting', totalBudget:100, timerSeconds:300, benefits:
 let PLAYER = { teamName:'', submitted:false };
 let editingBenefitId = null;
 let adminTimerInterval = null;
+let clientTimerInterval = null; // client-side countdown synced from Firebase
+let ADMIN_LOGGED_IN = false;
+
+// ── ADMIN PASSWORD (stored in Firebase so changeable) ─────────
+const DEFAULT_PASS = 'R@jeev2636';
+const adminPassRef = ref(db, 'adminConfig/password');
+
+async function getAdminPassword(){
+  const snap = await get(adminPassRef);
+  return snap.exists() ? snap.val() : DEFAULT_PASS;
+}
+
+// ── ADMIN LOGIN UI ────────────────────────────────────────────
+window.openAdminLogin = function(){
+  const ov = document.getElementById('admin-login-overlay');
+  ov.style.display='flex';
+  document.getElementById('admin-pass-input').value='';
+  document.getElementById('admin-login-err').style.display='none';
+  document.getElementById('admin-old-pass').value='';
+  document.getElementById('admin-new-pass').value='';
+  document.getElementById('admin-change-msg').style.display='none';
+  setTimeout(()=>document.getElementById('admin-pass-input').focus(),100);
+};
+window.closeAdminLogin = function(){
+  document.getElementById('admin-login-overlay').style.display='none';
+};
+window.doAdminLogin = async function(){
+  const entered = document.getElementById('admin-pass-input').value;
+  const correct = await getAdminPassword();
+  if(entered === correct){
+    ADMIN_LOGGED_IN = true;
+    closeAdminLogin();
+    // Show admin panel
+    document.getElementById('nav-admin-unlock-btn').style.display='none';
+    document.getElementById('nav-admin-btn').style.display='inline-flex';
+    document.getElementById('admin-logout-btn').style.display='inline-flex';
+    switchView('admin');
+    toast('✅ Admin access granted!','success');
+  } else {
+    document.getElementById('admin-login-err').style.display='block';
+  }
+};
+window.adminLogout = function(){
+  ADMIN_LOGGED_IN = false;
+  document.getElementById('nav-admin-btn').style.display='none';
+  document.getElementById('admin-logout-btn').style.display='none';
+  document.getElementById('nav-admin-unlock-btn').style.display='inline-flex';
+  switchView('player');
+  toast('Logged out of admin.','info');
+};
+window.changeAdminPassword = async function(){
+  const oldP = document.getElementById('admin-old-pass').value;
+  const newP = document.getElementById('admin-new-pass').value.trim();
+  const msg = document.getElementById('admin-change-msg');
+  const correct = await getAdminPassword();
+  if(oldP !== correct){ msg.style.display='block'; msg.style.color='var(--red)'; msg.textContent='❌ Current password is wrong!'; return; }
+  if(!newP){ msg.style.display='block'; msg.style.color='var(--red)'; msg.textContent='❌ New password cannot be empty!'; return; }
+  await set(adminPassRef, newP);
+  msg.style.display='block'; msg.style.color='var(--green)'; msg.textContent='✅ Password changed!';
+  document.getElementById('admin-old-pass').value='';
+  document.getElementById('admin-new-pass').value='';
+};
 
 // ── UTILS ─────────────────────────────────────────────────────
 function uid() { return Math.random().toString(36).substr(2,9); }
@@ -413,7 +496,44 @@ function startListeners(){
     const g=snap.val(); if(!g) return;
     LOCAL.gameStatus   = g.status;
     LOCAL.totalBudget  = g.totalBudget;
-    LOCAL.timerSeconds = g.timerSeconds;
+    LOCAL.timerMins    = g.timerMins||5;
+    LOCAL.startedAt    = g.startedAt||null;
+
+    // Compute remaining from startedAt
+    if(g.status==='running' && g.startedAt){
+      const totalSecs = (g.timerMins||5)*60;
+      const elapsed = Math.floor((Date.now() - g.startedAt)/1000);
+      LOCAL.timerSeconds = Math.max(0, totalSecs - elapsed);
+    } else if(g.status==='waiting'){
+      LOCAL.timerSeconds = (g.timerMins||5)*60;
+    } else if(g.status==='finished'){
+      LOCAL.timerSeconds = 0;
+    } else {
+      LOCAL.timerSeconds = g.timerSeconds||0;
+    }
+
+    // Start/stop client-side countdown
+    clearInterval(clientTimerInterval);
+    if(g.status==='running' && g.startedAt){
+      clientTimerInterval = setInterval(async()=>{
+        const totalSecs = (LOCAL.timerMins||5)*60;
+        const elapsed = Math.floor((Date.now() - LOCAL.startedAt)/1000);
+        LOCAL.timerSeconds = Math.max(0, totalSecs - elapsed);
+        renderStatusPill();
+        if(PLAYER.teamName) updatePlayerGameUI();
+        if(LOCAL.timerSeconds<=0){
+          clearInterval(clientTimerInterval);
+          // Only admin (or first client) marks finished — use transaction-like check
+          if(LOCAL.gameStatus==='running'){
+            LOCAL.gameStatus='finished';
+            await update(gameRef,{status:'finished'});
+            toast('⏰ Time up! Game over.','info');
+            syncPlayerToState();
+          }
+        }
+      },1000);
+    }
+
     renderStatusPill();
     renderAdminStats();
     syncPlayerToState();
@@ -432,9 +552,12 @@ function startListeners(){
 
 // ── VIEW SWITCH ───────────────────────────────────────────────
 window.switchView=function(v){
+  if(v==='admin' && !ADMIN_LOGGED_IN){ openAdminLogin(); return; }
   document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
-  document.querySelectorAll('.nav-tab').forEach((el,i)=>el.classList.toggle('active',(v==='admin'&&i===0)||(v==='player'&&i===1)));
+  document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
+  if(v==='admin') document.getElementById('nav-admin-btn').classList.add('active');
+  if(v==='player') document.getElementById('nav-player-btn').classList.add('active');
   if(v==='player') syncPlayerToState();
 };
 
@@ -484,19 +607,14 @@ window.startGame=async function(){
   // Reset teams
   const ts=await get(teamsRef);
   if(ts.exists()){ const u={}; Object.keys(ts.val()).forEach(n=>{ u[`teams/${n}/budget`]=budget; u[`teams/${n}/hp`]=0; u[`teams/${n}/selected`]={}; u[`teams/${n}/submitted`]=false; }); await update(ref(db),u); }
-  await set(gameRef,{status:'running',totalBudget:budget,timerMins:mins,timerSeconds:secs,maxTeams:maxT,eventName:document.getElementById('e-name').value||'Event'});
+  // Store startedAt (epoch ms) so any device can compute time remaining
+  const startedAt = Date.now();
+  await set(gameRef,{status:'running',totalBudget:budget,timerMins:mins,timerSeconds:secs,startedAt:startedAt,maxTeams:maxT,eventName:document.getElementById('e-name').value||'Event'});
   toast(' Game Started!','success');
-  // Admin runs the countdown and pushes timerSeconds to DB every second
-  clearInterval(adminTimerInterval);
-  let rem=secs;
-  adminTimerInterval=setInterval(async()=>{
-    rem--;
-    if(rem<=0){ rem=0; clearInterval(adminTimerInterval); await update(gameRef,{status:'finished',timerSeconds:0}); toast('⏰ Time up! Game over.','info'); }
-    else { await update(gameRef,{timerSeconds:rem}); }
-  },1000);
 };
 window.resetGame=async function(){
   clearInterval(adminTimerInterval);
+  clearInterval(clientTimerInterval);
   await remove(teamsRef);
   await set(gameRef,{status:'waiting',totalBudget:100,timerMins:5,timerSeconds:300,maxTeams:10,eventName:'Benefit Builder 2025'});
   PLAYER={teamName:'',submitted:false};
@@ -574,6 +692,17 @@ window.playerLogin=async function(){
   const name=document.getElementById('player-team-input').value.trim();
   if(!name){toast('Enter team name!','error');return;}
   const g=(await get(gameRef)).val()||{};
+  if(g.status==='waiting'){
+    // Register team but show waiting screen
+    const existing=(await get(teamsRef)).val()||{};
+    if(Object.keys(existing).length>=(g.maxTeams||10)&&!existing[name]){toast('Max teams reached!','error');return;}
+    PLAYER.teamName=name; PLAYER.submitted=false;
+    const snap=await get(ref(db,`teams/${name}`));
+    if(!snap.exists()) await set(ref(db,`teams/${name}`),{budget:g.totalBudget||100,hp:0,selected:{},submitted:false});
+    toast(`Welcome, ${name}! 👋 Waiting for admin to start…`,'info');
+    showPS('waiting');
+    return;
+  }
   const existing=(await get(teamsRef)).val()||{};
   if(Object.keys(existing).length>=(g.maxTeams||10)&&!existing[name]){toast('Max teams reached!','error');return;}
   PLAYER.teamName=name; PLAYER.submitted=false;
