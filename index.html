@@ -255,9 +255,10 @@
             <div class="form-group"><label>Max Teams</label><input type="number" id="e-maxteams" value="10" min="1"/></div>
           </div>
           <div class="divider"></div>
-          <div class="flex gap-8">
-            <button class="btn btn-success w-full" onclick="startGame()" style="justify-content:center;">▶ Start Game</button>
-            <button class="btn btn-danger w-full" onclick="resetGame()" style="justify-content:center;">↺ Reset</button>
+          <button class="btn btn-success w-full" onclick="startGame()" style="justify-content:center;margin-bottom:8px;">▶ Start Game</button>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button class="btn btn-ghost w-full" onclick="roundReset()" style="justify-content:center;border-color:var(--amber);color:var(--amber);font-size:0.78rem;">🔄 Same Teams<br><span style="font-size:0.7rem;opacity:0.7;">New Round</span></button>
+            <button class="btn btn-danger w-full" onclick="resetGame()" style="justify-content:center;font-size:0.78rem;">🗑 Full Reset<br><span style="font-size:0.7rem;opacity:0.7;">Delete All Teams</span></button>
           </div>
         </div>
       </div>
@@ -621,6 +622,29 @@ window.resetGame=async function(){
   toast('Game reset. ↺','info');
   showPS('login');
   document.getElementById('player-team-input').value='';
+};
+
+// Same teams, new round — reset budgets/selections only, keep team names
+window.roundReset=async function(){
+  clearInterval(adminTimerInterval);
+  clearInterval(clientTimerInterval);
+  const budget=parseFloat(document.getElementById('e-budget').value)||100;
+  const mins=parseInt(document.getElementById('e-timer').value)||5;
+  const ts=await get(teamsRef);
+  if(ts.exists()){
+    const u={};
+    Object.keys(ts.val()).forEach(n=>{
+      u[`teams/${n}/budget`]=budget;
+      u[`teams/${n}/hp`]=0;
+      u[`teams/${n}/selected`]={};
+      u[`teams/${n}/submitted`]=false;
+    });
+    await update(ref(db),u);
+  }
+  await update(gameRef,{status:'waiting',totalBudget:budget,timerMins:mins,timerSeconds:mins*60});
+  // Reset player state but keep team name
+  if(PLAYER.teamName){ PLAYER.submitted=false; showPS('waiting'); }
+  toast('🔄 New round ready! Same teams, fresh start.','success');
 };
 
 // ── ADMIN: RENDERS ────────────────────────────────────────────
