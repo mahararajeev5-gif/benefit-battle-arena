@@ -8,7 +8,7 @@
 
 | Role | Link |
 |------|------|
-| 🛠 Admin + 🎮 Player | [mahararajeev5-gif.github.io/benefit-battle-arena](https://mahararajeev5-gif.github.io/benefit-battle-arena/) |
+| 🛠 Admin + 🎮 Player | [rajeevmahara.github.io/benefit-battle-arena](rajeevmahara.github.io/benefit-battle-arena/) |
 
 > 💡 **Admin** apne laptop pe link khole aur **Players** ko same link WhatsApp pe bheje — sab ek hi file mein hai!
 
@@ -147,7 +147,7 @@ benefit-builder-default-rtdb
 ## 👨‍💻 Developer
 
 **Rajeev Mahara**
-- GitHub: [@mahararajeev5-gif](https://github.com/mahararajeev5-gif)
+- GitHub: [@rajeevmahara](https://github.com/rajeevmahara)
 
 ---
 
